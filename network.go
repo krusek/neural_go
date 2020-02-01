@@ -76,19 +76,38 @@ func sigmoid(m *mat.Dense) {
 }
 
 func (n *Network) FeedForward(a *mat.Dense) *mat.Dense {
+	max := n.maxSize()
+	// Larger matrix to hold products of weights and a's
+	var m mat.Dense
+	m.ReuseAs(max, max)
+
+	// Larger vector to hold a's
+	var aa mat.Dense
+	aa.ReuseAs(max, 1)
 	aaa := a
 
 	sig := func(_, _ int, v float64) float64 {
 		return n.sigmoid(v)
 	}
 	for ix, weight := range n.weights {
+		ar, _ := weight.Dims()
+		_, bc := aaa.Dims()
+		resizeMatrix(&m, ar, bc)
+		m.Mul(weight, aaa) // weight * a
+
+		resizeMatrix(&aa, ar, 1)
 		bias := n.biases[ix]
-		var m mat.Dense
-		m.Mul(weight, aaa)
-		var aa mat.Dense
-		aa.Add(&m, bias)
-		aa.Apply(sig, &aa)
+		aa.Add(&m, bias) // (weight * a) + bias
+
+		aa.Apply(sig, &aa) // sigmoid((weight * a) + bias)
 		aaa = &aa
 	}
-	return aaa
+	return &aa
+}
+
+func resizeMatrix(m *mat.Dense, r, c int) {
+	raw := m.RawMatrix()
+	raw.Cols = c
+	raw.Rows = r
+	m.SetRawMatrix(raw)
 }
