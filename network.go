@@ -68,13 +68,6 @@ func (n *Network) maxSize() int {
 	return m
 }
 
-func sigmoid(m *mat.Dense) {
-	sig := func(i, j int, v float64) float64 {
-		return 1.0 / (1.0 + math.Exp(v))
-	}
-	m.Apply(sig, m)
-}
-
 func (n *Network) FeedForward(a *mat.Dense) *mat.Dense {
 	max := n.maxSize()
 	// Larger matrix to hold products of weights and a's
