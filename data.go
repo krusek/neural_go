@@ -12,6 +12,11 @@ type ImageStream struct {
 	imageCols int
 }
 
+type LabelStream struct {
+	file  *os.File
+	count int
+}
+
 func check(e error) {
 	if e != nil {
 		panic(e)
@@ -23,6 +28,28 @@ func readInt(dat *os.File) uint32 {
 	_, err := dat.Read(b1)
 	check(err)
 	return binary.BigEndian.Uint32(b1)
+}
+
+func LoadLabelStream(name string) LabelStream {
+	dat, err := os.Open(name)
+	check(err)
+
+	_ = readInt(dat)
+
+	count := int(readInt(dat))
+
+	return LabelStream{dat, count}
+}
+
+func (l LabelStream) ReadLabels() []byte {
+	defer l.file.Close()
+	labels := make([]byte, l.count)
+	n, err := l.file.Read(labels)
+	check(err)
+	if n != l.count {
+		panic("not enough stuff read")
+	}
+	return labels
 }
 
 func LoadImageStream(name string) ImageStream {
@@ -44,6 +71,7 @@ func (i ImageStream) ReadImage() []byte {
 }
 
 func (i ImageStream) ReadImages() [][]byte {
+	defer i.file.Close()
 	images := make([][]byte, i.count)
 	for ix := 0; ix < i.count; ix++ {
 		images[ix] = i.ReadImage()

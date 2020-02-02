@@ -2,24 +2,11 @@ package neural_go
 
 import (
 	"bytes"
-	"fmt"
-	"os"
 	"strings"
 	"testing"
 
 	"gotest.tools/assert"
 )
-
-func TestReadLabelData(t *testing.T) {
-	dat, err := os.Open("data/t10k-labels-idx1-ubyte")
-	check(err)
-
-	fmt.Println(readInt(dat))
-
-	count := readInt(dat)
-	fmt.Println(count)
-	t.Fail()
-}
 
 func TestReadImageData(t *testing.T) {
 	stream := LoadImageStream("data/t10k-images-idx3-ubyte")
@@ -83,4 +70,11 @@ func TestReadImagesData(t *testing.T) {
 	for _, image := range images {
 		assert.Equal(t, stream.imageCols*stream.imageRows, len(image))
 	}
+}
+
+func TestReadLabel(t *testing.T) {
+	stream := LoadLabelStream("data/t10k-labels-idx1-ubyte")
+	labels := stream.ReadLabels()
+	assert.Equal(t, stream.count, 10000)
+	assert.Equal(t, int(labels[0]), 7)
 }
